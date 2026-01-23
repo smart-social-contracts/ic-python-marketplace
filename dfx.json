@@ -21,8 +21,7 @@
         {
           "name": "candid:service"
         }
-      ],
-      "init_arg": "(record { name = \"Simple Marketplace\"; description = opt \"A simple marketplace for ICRC-1/ICRC-7 tokens\"; test = opt true })"
+      ]
     },
     "marketplace_frontend": {
       "dependencies": [
@@ -33,6 +32,18 @@
       ],
       "type": "assets",
       "workspace": "marketplace_frontend"
+    },
+    "token_backend": {
+      "type": "custom",
+      "candid": "https://github.com/smart-social-contracts/kybra-simple-token/releases/latest/download/token_backend.did",
+      "wasm": "https://github.com/smart-social-contracts/kybra-simple-token/releases/latest/download/token_backend.wasm",
+      "init_arg": "(record { name = \"Test Token A\"; symbol = \"TKNA\"; decimals = 8 : nat8; total_supply = 100_000_000_000_000_000 : nat; fee = 10_000 : nat; test = opt true })"
+    },
+    "token_backend_b": {
+      "type": "custom",
+      "candid": "https://github.com/smart-social-contracts/kybra-simple-token/releases/latest/download/token_backend.did",
+      "wasm": "https://github.com/smart-social-contracts/kybra-simple-token/releases/latest/download/token_backend.wasm",
+      "init_arg": "(record { name = \"Test Token B\"; symbol = \"TKNB\"; decimals = 8 : nat8; total_supply = 100_000_000_000_000_000 : nat; fee = 10_000 : nat; test = opt true })"
     }
   },
   "networks": {

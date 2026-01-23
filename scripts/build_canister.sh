@@ -1,6 +1,8 @@
 #!/bin/bash
-# Build marketplace canisters and extract wasm/did artifacts
+# Build marketplace backend canister and extract wasm/did artifacts
 # Usage: ./scripts/build_canister.sh [output_dir]
+#
+# Note: Only builds backend. Frontend requires all token canisters for dfx generate.
 
 set -e
 
@@ -20,7 +22,7 @@ if ! dfx ping &>/dev/null; then
     sleep 2
 fi
 
-# Build backend canister
+# Build backend canister only
 echo "Building marketplace_backend canister..."
 dfx canister create marketplace_backend
 dfx build marketplace_backend
@@ -30,20 +32,8 @@ cp .kybra/marketplace_backend/marketplace_backend.wasm "$OUTPUT_DIR/"
 cp src/marketplace_backend/marketplace_backend.did "$OUTPUT_DIR/"
 gzip -k "$OUTPUT_DIR/marketplace_backend.wasm"
 
-# Build frontend canister
-echo "Building marketplace_frontend canister..."
-echo "Installing frontend dependencies..."
-cd src/marketplace_frontend && npm install && npm run build && cd ../..
-dfx canister create marketplace_frontend
-dfx build marketplace_frontend
-
-# Copy frontend artifacts
-cp .dfx/local/canisters/marketplace_frontend/assetstorage.wasm.gz "$OUTPUT_DIR/marketplace_frontend.wasm.gz"
-gunzip -k "$OUTPUT_DIR/marketplace_frontend.wasm.gz"
-cp .dfx/local/canisters/marketplace_frontend/assetstorage.did "$OUTPUT_DIR/marketplace_frontend.did"
-
 # Build info
 echo "Marketplace Build Date: $(date -u)" >> "$OUTPUT_DIR/BUILD_INFO.txt"
 
-echo "✅ Marketplace artifacts built successfully:"
-ls -la "$OUTPUT_DIR/marketplace_"*
+echo "✅ Backend artifacts built successfully:"
+ls -la "$OUTPUT_DIR/"*

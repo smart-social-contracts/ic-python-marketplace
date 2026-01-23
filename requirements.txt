@@ -1,0 +1,2 @@
+kybra==0.7.*
+kybra-simple-logging==0.2.*

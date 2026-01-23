@@ -1,0 +1,60 @@
+{
+  "canisters": {
+    "marketplace_backend": {
+      "build": "python -m kybra marketplace_backend src/marketplace_backend/src/main.py",
+      "candid": "src/marketplace_backend/marketplace_backend.did",
+      "declarations": {
+        "node_compatibility": true
+      },
+      "gzip": true,
+      "tech_stack": {
+        "cdk": {
+          "kybra": {}
+        },
+        "language": {
+          "python": {}
+        }
+      },
+      "type": "custom",
+      "wasm": ".kybra/marketplace_backend/marketplace_backend.wasm",
+      "metadata": [
+        {
+          "name": "candid:service"
+        }
+      ],
+      "init_arg": "(record { name = \"Simple Marketplace\"; description = opt \"A simple marketplace for ICRC-1/ICRC-7 tokens\"; test = opt true })"
+    },
+    "marketplace_frontend": {
+      "dependencies": [
+        "marketplace_backend"
+      ],
+      "source": [
+        "src/marketplace_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "marketplace_frontend"
+    }
+  },
+  "networks": {
+    "local": {
+      "bind": "127.0.0.1:8000",
+      "type": "ephemeral"
+    },
+    "staging": {
+      "providers": ["https://icp0.io"],
+      "type": "persistent"
+    },
+    "ic": {
+      "providers": ["https://icp0.io"],
+      "type": "persistent"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}

@@ -1,0 +1,100 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_type:
+        description: 'Type of release (patch, minor, major)'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+
+env:
+  ICP_DEV_IMAGE: ghcr.io/smart-social-contracts/icp-dev-env:db60540
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+      
+      - name: Install semver
+        run: pip install semver
+      
+      - name: Bump version
+        id: version
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          ./scripts/bump_version.sh ${{ github.event.inputs.release_type }}
+          NEW_VERSION=$(cat version.txt)
+          echo "VERSION=v${NEW_VERSION}" >> $GITHUB_OUTPUT
+      
+      - name: Build artifacts
+        run: |
+          mkdir -p artifacts
+          docker run --rm \
+            -v "$(pwd):/workspace" \
+            -w /workspace \
+            -e VERSION="${{ steps.version.outputs.VERSION }}" \
+            ${{ env.ICP_DEV_IMAGE }} bash -c '
+          set -e
+          dfxvm default 0.29.0
+          
+          echo "=== Building Marketplace ==="
+          pip install -q -r requirements.txt
+          ./scripts/build_canister.sh /workspace/artifacts
+          
+          echo "Version: $VERSION" >> /workspace/artifacts/BUILD_INFO.txt'
+      
+      - name: Commit and push version
+        run: |
+          git add version.txt
+          git commit -m "Bump version to ${{ steps.version.outputs.VERSION }}"
+          git push origin main
+      
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.VERSION }}
+          name: Release ${{ steps.version.outputs.VERSION }}
+          body: |
+            ## Kybra Simple Marketplace Release ${{ steps.version.outputs.VERSION }}
+            
+            ### Description
+            A simple marketplace for trading ICRC-1 (fungible) and ICRC-7 (non-fungible) tokens on the Internet Computer.
+            
+            ### Core Entities
+            - **Resource**: Any owned resource (fungible or non-fungible token)
+            - **Offer**: A public offer to sell a resource for a given price
+            - **Exchange**: A completed exchange between two users based on an offer
+            
+            ### Artifacts
+            - `marketplace_backend.wasm` - Marketplace backend canister (Kybra Python)
+            - `marketplace_frontend.wasm` - Marketplace frontend canister (SvelteKit)
+          files: |
+            artifacts/marketplace_backend.wasm.gz
+            artifacts/marketplace_backend.wasm
+            artifacts/marketplace_backend.did
+            artifacts/marketplace_frontend.wasm.gz
+            artifacts/marketplace_frontend.wasm
+            artifacts/marketplace_frontend.did
+            artifacts/BUILD_INFO.txt
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

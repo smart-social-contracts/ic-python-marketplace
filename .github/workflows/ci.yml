@@ -1,0 +1,42 @@
+name: CI - Marketplace
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'requirements.txt'
+      - 'dfx.json'
+      - '.github/workflows/ci.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'tests/**'
+      - 'requirements.txt'
+      - 'dfx.json'
+      - '.github/workflows/ci.yml'
+  workflow_dispatch:
+
+env:
+  ICP_DEV_IMAGE: ghcr.io/smart-social-contracts/icp-dev-env:db60540
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Run CI (integration tests)
+        run: |
+          docker run --rm \
+            -v "$(pwd):/workspace" \
+            -w /workspace \
+            ${{ env.ICP_DEV_IMAGE }} bash -c "
+          set -e
+          echo '=== Integration Tests (Marketplace) ==='
+          ./tests/integration/entrypoint.sh
+          
+          echo '=== Marketplace CI passed! ==='"

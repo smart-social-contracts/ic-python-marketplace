@@ -1,8 +1,0 @@
-{
-  "marketplace_backend": {
-    "staging": "PLACEHOLDER_BACKEND_ID"
-  },
-  "marketplace_frontend": {
-    "staging": "PLACEHOLDER_FRONTEND_ID"
-  }
-}

@@ -33,7 +33,7 @@ gzip -k "$OUTPUT_DIR/marketplace_backend.wasm"
 # Build frontend canister
 echo "Building marketplace_frontend canister..."
 echo "Installing frontend dependencies..."
-cd src/marketplace_frontend && npm install && cd ../..
+cd src/marketplace_frontend && npm install && npm run build && cd ../..
 dfx canister create marketplace_frontend
 dfx build marketplace_frontend
 

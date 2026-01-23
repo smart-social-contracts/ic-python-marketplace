@@ -1,47 +1,49 @@
 <script>
   import { onMount } from 'svelte';
   import { backend } from '$lib/canisters';
+  import { Principal } from '@dfinity/principal';
 
   let loading = true;
   let error = null;
   
-  // Marketplace info
-  let marketplaceName = '';
-  let testMode = false;
-  let stats = null;
+  // Stats
+  let stats = { assets: [], asset_pairs: [], trades: [] };
   
   // Active tab
-  let activeTab = 'offers';
-  
-  // Data
-  let offers = [];
-  let resources = [];
-  let exchanges = [];
+  let activeTab = 'trades';
   
   // Forms
-  let showRegisterForm = false;
-  let showOfferForm = false;
+  let showAssetForm = false;
+  let showPairForm = false;
+  let showQuoteForm = false;
   
-  // Register Resource Form
-  let registerForm = {
-    resource_type: 'ICRC1',
-    canister_id: '',
-    token_id: '',
-    amount: 1
+  // Add Asset Form
+  let assetForm = {
+    id: '',
+    principal: '',
+    standard: 'ICRC1'
   };
-  let registering = false;
-  let registerSuccess = null;
-  let registerError = null;
+  let addingAsset = false;
+  let assetSuccess = null;
+  let assetError = null;
   
-  // Create Offer Form
-  let offerForm = {
-    resource_id: '',
-    price_canister_id: '',
-    price_amount: 0
+  // Add Asset Pair Form
+  let pairForm = {
+    asset1: '',
+    asset2: ''
   };
-  let creatingOffer = false;
-  let offerSuccess = null;
-  let offerError = null;
+  let addingPair = false;
+  let pairSuccess = null;
+  let pairError = null;
+  
+  // Send Quote Form
+  let quoteForm = {
+    asset_pair_id: '',
+    price: 1.0
+  };
+  let sendingQuote = false;
+  let quoteSuccess = null;
+  let quoteError = null;
 
   onMount(async () => {
     await loadData();
@@ -52,21 +54,7 @@
       loading = true;
       error = null;
       
-      const [name, test, statsData, offersData, resourcesData, exchangesData] = await Promise.all([
-        backend.get_name(),
-        backend.is_test_mode().catch(() => false),
-        backend.get_stats(),
-        backend.get_active_offers(0n, 50n),
-        backend.get_all_resources(0n, 50n),
-        backend.get_all_exchanges(0n, 50n)
-      ]);
-      
-      marketplaceName = name;
-      testMode = test;
-      stats = statsData;
-      offers = offersData;
-      resources = resourcesData;
-      exchanges = exchangesData;
+      stats = await backend.get_stats();
       
     } catch (e) {
       console.error('Failed to load data:', e);
@@ -76,90 +64,91 @@
     }
   }
 
-  async function handleRegisterResource() {
+  async function handleAddAsset() {
     try {
-      registering = true;
-      registerSuccess = null;
-      registerError = null;
+      addingAsset = true;
+      assetSuccess = null;
+      assetError = null;
       
-      const result = await backend.register_resource({
-        resource_type: registerForm.resource_type,
-        canister_id: registerForm.canister_id,
-        token_id: registerForm.token_id ? [BigInt(registerForm.token_id)] : [],
-        amount: BigInt(registerForm.amount)
-      });
+      const result = await backend.add_asset(
+        assetForm.id,
+        Principal.fromText(assetForm.principal),
+        assetForm.standard
+      );
       
-      if ('Ok' in result) {
-        registerSuccess = `Resource registered with ID: ${result.Ok}`;
-        registerForm = { resource_type: 'ICRC1', canister_id: '', token_id: '', amount: 1 };
+      if (result.success) {
+        assetSuccess = `Asset "${assetForm.id}" added successfully`;
+        assetForm = { id: '', principal: '', standard: 'ICRC1' };
         await loadData();
       } else {
-        registerError = result.Err?.message || 'Registration failed';
+        assetError = result.data?.Error || 'Failed to add asset';
       }
     } catch (e) {
-      console.error('Register failed:', e);
-      registerError = e.message || 'Registration failed';
+      console.error('Add asset failed:', e);
+      assetError = e.message || 'Failed to add asset';
     } finally {
-      registering = false;
+      addingAsset = false;
     }
   }
 
-  async function handleCreateOffer() {
+  async function handleAddPair() {
     try {
-      creatingOffer = true;
-      offerSuccess = null;
-      offerError = null;
+      addingPair = true;
+      pairSuccess = null;
+      pairError = null;
       
-      const result = await backend.create_offer({
-        resource_id: BigInt(offerForm.resource_id),
-        price_canister_id: offerForm.price_canister_id,
-        price_amount: BigInt(offerForm.price_amount)
-      });
+      const result = await backend.add_asset_pair(pairForm.asset1, pairForm.asset2);
       
-      if ('Ok' in result) {
-        offerSuccess = `Offer created with ID: ${result.Ok}`;
-        offerForm = { resource_id: '', price_canister_id: '', price_amount: 0 };
+      if (result.success) {
+        pairSuccess = `Asset pair "${pairForm.asset1}_${pairForm.asset2}" created`;
+        pairForm = { asset1: '', asset2: '' };
         await loadData();
       } else {
-        offerError = result.Err?.message || 'Failed to create offer';
+        pairError = result.data?.Error || 'Failed to create pair';
       }
     } catch (e) {
-      console.error('Create offer failed:', e);
-      offerError = e.message || 'Failed to create offer';
+      console.error('Add pair failed:', e);
+      pairError = e.message || 'Failed to create pair';
     } finally {
-      creatingOffer = false;
+      addingPair = false;
     }
   }
 
-  async function handleAcceptOffer(offerId) {
+  async function handleSendQuote() {
     try {
-      const result = await backend.accept_offer(BigInt(offerId));
+      sendingQuote = true;
+      quoteSuccess = null;
+      quoteError = null;
       
-      if ('Ok' in result) {
-        alert(`Exchange completed! ID: ${result.Ok}`);
+      const result = await backend.send_quote(quoteForm.asset_pair_id, quoteForm.price);
+      
+      if (result.success) {
+        quoteSuccess = 'Quote sent successfully';
+        quoteForm = { asset_pair_id: '', price: 1.0 };
         await loadData();
       } else {
-        alert(`Failed: ${result.Err?.message || 'Unknown error'}`);
+        quoteError = result.data?.Error || 'Failed to send quote';
       }
     } catch (e) {
-      console.error('Accept offer failed:', e);
-      alert(`Failed: ${e.message}`);
+      console.error('Send quote failed:', e);
+      quoteError = e.message || 'Failed to send quote';
+    } finally {
+      sendingQuote = false;
     }
   }
 
-  async function handleCancelOffer(offerId) {
-    if (!confirm('Are you sure you want to cancel this offer?')) return;
-    
+  async function handleAcceptQuote(tradeId) {
     try {
-      const result = await backend.cancel_offer(BigInt(offerId));
+      const result = await backend.accept_quote(tradeId);
       
-      if ('Ok' in result) {
+      if (result.success) {
+        alert('Quote accepted!');
         await loadData();
       } else {
-        alert(`Failed: ${result.Err?.message || 'Unknown error'}`);
+        alert(`Failed: ${result.data?.Error || 'Unknown error'}`);
       }
     } catch (e) {
-      console.error('Cancel offer failed:', e);
+      console.error('Accept quote failed:', e);
       alert(`Failed: ${e.message}`);
     }
   }
@@ -168,31 +157,14 @@
     if (!addr || addr.length <= 16) return addr;
     return addr.slice(0, 8) + '...' + addr.slice(-6);
   }
-
-  function formatAmount(amount) {
-    return Number(amount).toLocaleString();
-  }
-
-  function formatTime(timestamp) {
-    if (!timestamp) return '-';
-    try {
-      const date = new Date(Number(timestamp) / 1_000_000);
-      return date.toLocaleString();
-    } catch {
-      return '-';
-    }
-  }
 </script>
 
 <main>
   <div class="dashboard">
     <div class="dashboard-header">
-      <h1>{marketplaceName || 'Marketplace'}</h1>
+      <h1>Marketplace</h1>
       <span class="badge">ICRC-1</span>
       <span class="badge">ICRC-7</span>
-      {#if testMode}
-        <span class="badge test">TEST MODE</span>
-      {/if}
     </div>
 
     {#if loading}
@@ -201,220 +173,103 @@
       <div class="error">{error}</div>
     {:else}
       <!-- Stats Grid -->
-      {#if stats}
-        <div class="stats-grid">
-          <div class="stat-card">
-            <div class="stat-label">Total Resources</div>
-            <div class="stat-value">{stats.total_resources}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Active Offers</div>
-            <div class="stat-value supply">{stats.active_offers}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Total Offers</div>
-            <div class="stat-value">{stats.total_offers}</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Exchanges</div>
-            <div class="stat-value">{stats.total_exchanges}</div>
-          </div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Assets</div>
+          <div class="stat-value">{stats.assets.length}</div>
         </div>
-      {/if}
+        <div class="stat-card">
+          <div class="stat-label">Trading Pairs</div>
+          <div class="stat-value supply">{stats.asset_pairs.length}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Trades</div>
+          <div class="stat-value">{stats.trades.length}</div>
+        </div>
+      </div>
 
       <!-- Tabs -->
       <div class="tabs">
-        <button class:active={activeTab === 'offers'} on:click={() => activeTab = 'offers'}>
-          Active Offers
+        <button class:active={activeTab === 'trades'} on:click={() => activeTab = 'trades'}>
+          Trades
         </button>
-        <button class:active={activeTab === 'resources'} on:click={() => activeTab = 'resources'}>
-          Resources
+        <button class:active={activeTab === 'pairs'} on:click={() => activeTab = 'pairs'}>
+          Trading Pairs
         </button>
-        <button class:active={activeTab === 'exchanges'} on:click={() => activeTab = 'exchanges'}>
-          Exchanges
+        <button class:active={activeTab === 'assets'} on:click={() => activeTab = 'assets'}>
+          Assets
         </button>
       </div>
 
-      <!-- Active Offers Tab -->
-      {#if activeTab === 'offers'}
+      <!-- Trades Tab -->
+      {#if activeTab === 'trades'}
         <div class="card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h2>Active Offers</h2>
-            <button class="btn btn-primary" on:click={() => showOfferForm = !showOfferForm}>
-              {showOfferForm ? 'Cancel' : '+ Create Offer'}
+            <h2>Trades</h2>
+            <button class="btn btn-primary" on:click={() => showQuoteForm = !showQuoteForm}>
+              {showQuoteForm ? 'Cancel' : '+ Send Quote'}
             </button>
           </div>
           
-          {#if showOfferForm}
+          {#if showQuoteForm}
             <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
               <div class="form-row">
                 <div class="form-group">
-                  <label for="resource_id">Resource ID</label>
-                  <input 
-                    id="resource_id"
-                    type="number" 
-                    bind:value={offerForm.resource_id}
-                    placeholder="1"
-                    disabled={creatingOffer}
-                  />
-                </div>
-                <div class="form-group">
-                  <label for="price_canister">Payment Token Canister</label>
-                  <input 
-                    id="price_canister"
-                    type="text" 
-                    bind:value={offerForm.price_canister_id}
-                    placeholder="ryjl3-tyaaa-aaaaa-aaaba-cai"
-                    disabled={creatingOffer}
-                  />
-                </div>
-                <div class="form-group">
-                  <label for="price_amount">Price Amount</label>
-                  <input 
-                    id="price_amount"
-                    type="number" 
-                    bind:value={offerForm.price_amount}
-                    placeholder="1000000"
-                    disabled={creatingOffer}
-                  />
-                </div>
-              </div>
-              <button 
-                class="btn btn-primary" 
-                on:click={handleCreateOffer}
-                disabled={creatingOffer || !offerForm.resource_id || !offerForm.price_canister_id}
-              >
-                {creatingOffer ? 'Creating...' : 'Create Offer'}
-              </button>
-              {#if offerSuccess}
-                <div class="success-message">{offerSuccess}</div>
-              {/if}
-              {#if offerError}
-                <div class="error-message">{offerError}</div>
-              {/if}
-            </div>
-          {/if}
-          
-          {#if offers.length === 0}
-            <div class="no-data">No active offers</div>
-          {:else}
-            <div class="offers-grid">
-              {#each offers as offer}
-                <div class="offer-card">
-                  <div class="offer-header">
-                    <span class="offer-id">Offer #{offer.id}</span>
-                    <span class="badge active">{offer.status}</span>
-                  </div>
-                  <div class="offer-price">{formatAmount(offer.price_amount)}</div>
-                  <div class="offer-resource">Resource #{offer.resource_id}</div>
-                  <div class="offer-seller">Seller: {truncateAddress(offer.seller)}</div>
-                  <div class="offer-actions">
-                    <button class="btn btn-success" on:click={() => handleAcceptOffer(offer.id)}>
-                      Buy
-                    </button>
-                    <button class="btn btn-danger" on:click={() => handleCancelOffer(offer.id)}>
-                      Cancel
-                    </button>
-                  </div>
-                </div>
-              {/each}
-            </div>
-          {/if}
-        </div>
-      {/if}
-
-      <!-- Resources Tab -->
-      {#if activeTab === 'resources'}
-        <div class="card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h2>Resources</h2>
-            <button class="btn btn-primary" on:click={() => showRegisterForm = !showRegisterForm}>
-              {showRegisterForm ? 'Cancel' : '+ Register Resource'}
-            </button>
-          </div>
-          
-          {#if showRegisterForm}
-            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-              <div class="form-row">
-                <div class="form-group">
-                  <label for="resource_type">Type</label>
-                  <select id="resource_type" bind:value={registerForm.resource_type} disabled={registering}>
-                    <option value="ICRC1">ICRC-1 (Fungible)</option>
-                    <option value="ICRC7">ICRC-7 (NFT)</option>
+                  <label for="asset_pair_id">Asset Pair</label>
+                  <select id="asset_pair_id" bind:value={quoteForm.asset_pair_id} disabled={sendingQuote}>
+                    <option value="">Select pair...</option>
+                    {#each stats.asset_pairs as pair}
+                      <option value={pair}>{pair}</option>
+                    {/each}
                   </select>
                 </div>
                 <div class="form-group">
-                  <label for="canister_id">Token Canister ID</label>
+                  <label for="price">Price</label>
                   <input 
-                    id="canister_id"
-                    type="text" 
-                    bind:value={registerForm.canister_id}
-                    placeholder="ryjl3-tyaaa-aaaaa-aaaba-cai"
-                    disabled={registering}
-                  />
-                </div>
-                {#if registerForm.resource_type === 'ICRC7'}
-                  <div class="form-group">
-                    <label for="token_id">Token ID</label>
-                    <input 
-                      id="token_id"
-                      type="number" 
-                      bind:value={registerForm.token_id}
-                      placeholder="1"
-                      disabled={registering}
-                    />
-                  </div>
-                {/if}
-                <div class="form-group">
-                  <label for="amount">Amount</label>
-                  <input 
-                    id="amount"
+                    id="price"
                     type="number" 
-                    bind:value={registerForm.amount}
-                    placeholder="1"
-                    disabled={registering}
+                    step="0.01"
+                    bind:value={quoteForm.price}
+                    placeholder="1.0"
+                    disabled={sendingQuote}
                   />
                 </div>
               </div>
               <button 
                 class="btn btn-primary" 
-                on:click={handleRegisterResource}
-                disabled={registering || !registerForm.canister_id}
+                on:click={handleSendQuote}
+                disabled={sendingQuote || !quoteForm.asset_pair_id}
               >
-                {registering ? 'Registering...' : 'Register Resource'}
+                {sendingQuote ? 'Sending...' : 'Send Quote'}
               </button>
-              {#if registerSuccess}
-                <div class="success-message">{registerSuccess}</div>
+              {#if quoteSuccess}
+                <div class="success-message">{quoteSuccess}</div>
               {/if}
-              {#if registerError}
-                <div class="error-message">{registerError}</div>
+              {#if quoteError}
+                <div class="error-message">{quoteError}</div>
               {/if}
             </div>
           {/if}
           
-          {#if resources.length === 0}
-            <div class="no-data">No resources registered</div>
+          {#if stats.trades.length === 0}
+            <div class="no-data">No trades yet</div>
           {:else}
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Type</th>
-                  <th>Canister</th>
-                  <th>Token ID</th>
-                  <th>Amount</th>
-                  <th>Owner</th>
+                  <th>Trade ID</th>
+                  <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {#each resources as resource}
+                {#each stats.trades as trade}
                   <tr>
-                    <td>{resource.id}</td>
-                    <td><span class="badge">{resource.resource_type}</span></td>
-                    <td class="address">{truncateAddress(resource.canister_id)}</td>
-                    <td>{resource.token_id?.[0] ?? '-'}</td>
-                    <td>{formatAmount(resource.amount)}</td>
-                    <td class="address">{truncateAddress(resource.owner)}</td>
+                    <td>{trade}</td>
+                    <td>
+                      <button class="btn btn-success btn-sm" on:click={() => handleAcceptQuote(trade)}>
+                        Accept
+                      </button>
+                    </td>
                   </tr>
                 {/each}
               </tbody>
@@ -423,35 +278,145 @@
         </div>
       {/if}
 
-      <!-- Exchanges Tab -->
-      {#if activeTab === 'exchanges'}
+      <!-- Trading Pairs Tab -->
+      {#if activeTab === 'pairs'}
         <div class="card">
-          <h2>Recent Exchanges</h2>
-          {#if exchanges.length === 0}
-            <div class="no-data">No exchanges yet</div>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2>Trading Pairs</h2>
+            <button class="btn btn-primary" on:click={() => showPairForm = !showPairForm}>
+              {showPairForm ? 'Cancel' : '+ Add Pair'}
+            </button>
+          </div>
+          
+          {#if showPairForm}
+            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="asset1">Asset 1</label>
+                  <select id="asset1" bind:value={pairForm.asset1} disabled={addingPair}>
+                    <option value="">Select asset...</option>
+                    {#each stats.assets as asset}
+                      <option value={asset}>{asset}</option>
+                    {/each}
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="asset2">Asset 2</label>
+                  <select id="asset2" bind:value={pairForm.asset2} disabled={addingPair}>
+                    <option value="">Select asset...</option>
+                    {#each stats.assets as asset}
+                      <option value={asset}>{asset}</option>
+                    {/each}
+                  </select>
+                </div>
+              </div>
+              <button 
+                class="btn btn-primary" 
+                on:click={handleAddPair}
+                disabled={addingPair || !pairForm.asset1 || !pairForm.asset2}
+              >
+                {addingPair ? 'Creating...' : 'Create Pair'}
+              </button>
+              {#if pairSuccess}
+                <div class="success-message">{pairSuccess}</div>
+              {/if}
+              {#if pairError}
+                <div class="error-message">{pairError}</div>
+              {/if}
+            </div>
+          {/if}
+          
+          {#if stats.asset_pairs.length === 0}
+            <div class="no-data">No trading pairs</div>
           {:else}
             <table class="data-table">
               <thead>
                 <tr>
-                  <th>ID</th>
-                  <th>Offer</th>
-                  <th>Resource</th>
-                  <th>Buyer</th>
-                  <th>Seller</th>
-                  <th>Price</th>
-                  <th>Time</th>
+                  <th>Pair ID</th>
                 </tr>
               </thead>
               <tbody>
-                {#each exchanges as exchange}
+                {#each stats.asset_pairs as pair}
                   <tr>
-                    <td>{exchange.id}</td>
-                    <td>#{exchange.offer_id}</td>
-                    <td>#{exchange.resource_id}</td>
-                    <td class="address">{truncateAddress(exchange.buyer)}</td>
-                    <td class="address">{truncateAddress(exchange.seller)}</td>
-                    <td>{formatAmount(exchange.price_amount)}</td>
-                    <td>{formatTime(exchange.completed_at)}</td>
+                    <td>{pair}</td>
+                  </tr>
+                {/each}
+              </tbody>
+            </table>
+          {/if}
+        </div>
+      {/if}
+
+      <!-- Assets Tab -->
+      {#if activeTab === 'assets'}
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2>Assets</h2>
+            <button class="btn btn-primary" on:click={() => showAssetForm = !showAssetForm}>
+              {showAssetForm ? 'Cancel' : '+ Add Asset'}
+            </button>
+          </div>
+          
+          {#if showAssetForm}
+            <div style="background: var(--bg-secondary); padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="asset_id">Asset ID</label>
+                  <input 
+                    id="asset_id"
+                    type="text" 
+                    bind:value={assetForm.id}
+                    placeholder="TKNA"
+                    disabled={addingAsset}
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="principal">Token Canister Principal</label>
+                  <input 
+                    id="principal"
+                    type="text" 
+                    bind:value={assetForm.principal}
+                    placeholder="ryjl3-tyaaa-aaaaa-aaaba-cai"
+                    disabled={addingAsset}
+                  />
+                </div>
+                <div class="form-group">
+                  <label for="standard">Standard</label>
+                  <select id="standard" bind:value={assetForm.standard} disabled={addingAsset}>
+                    <option value="ICRC1">ICRC-1</option>
+                    <option value="ICRC7">ICRC-7</option>
+                  </select>
+                </div>
+              </div>
+              <button 
+                class="btn btn-primary" 
+                on:click={handleAddAsset}
+                disabled={addingAsset || !assetForm.id || !assetForm.principal}
+              >
+                {addingAsset ? 'Adding...' : 'Add Asset'}
+              </button>
+              {#if assetSuccess}
+                <div class="success-message">{assetSuccess}</div>
+              {/if}
+              {#if assetError}
+                <div class="error-message">{assetError}</div>
+              {/if}
+            </div>
+          {/if}
+          
+          {#if stats.assets.length === 0}
+            <div class="no-data">No assets registered</div>
+          {:else}
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Asset ID</th>
+                </tr>
+              </thead>
+              <tbody>
+                {#each stats.assets as asset}
+                  <tr>
+                    <td>{asset}</td>
                   </tr>
                 {/each}
               </tbody>

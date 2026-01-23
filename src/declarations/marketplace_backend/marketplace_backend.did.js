@@ -1,135 +1,42 @@
 export const idlFactory = ({ IDL }) => {
-  const InitArg = IDL.Record({
-    'name' : IDL.Text,
-    'test' : IDL.Opt(IDL.Bool),
-    'description' : IDL.Opt(IDL.Text),
+  const AssetRecord = IDL.Record({
+    'id' : IDL.Text,
+    'principal' : IDL.Text,
+    'standard' : IDL.Text,
   });
-  const GenericError = IDL.Record({
-    'message' : IDL.Text,
-    'error_code' : IDL.Nat,
+  const AssetPairRecord = IDL.Record({
+    'id' : IDL.Text,
+    'asset1' : IDL.Text,
+    'asset2' : IDL.Text,
   });
-  const AcceptOfferResult = IDL.Variant({
-    'Ok' : IDL.Nat64,
-    'Err' : GenericError,
-  });
-  const CreateOfferArg = IDL.Record({
-    'price_amount' : IDL.Nat64,
-    'price_canister_id' : IDL.Text,
-    'resource_id' : IDL.Nat64,
-  });
-  const OfferInfo = IDL.Record({
-    'id' : IDL.Nat64,
+  const TradeRecord = IDL.Record({
+    'id' : IDL.Text,
     'status' : IDL.Text,
-    'updated_at' : IDL.Nat64,
-    'created_at' : IDL.Nat64,
-    'seller' : IDL.Text,
-    'price_amount' : IDL.Nat64,
-    'price_canister_id' : IDL.Text,
-    'resource_id' : IDL.Nat64,
+    'asset_pair' : IDL.Text,
+    'owner1' : IDL.Text,
+    'owner2' : IDL.Text,
+    'price' : IDL.Float64,
   });
-  const ExchangeInfo = IDL.Record({
-    'id' : IDL.Nat64,
-    'seller' : IDL.Text,
-    'price_amount' : IDL.Nat64,
-    'offer_id' : IDL.Nat64,
-    'resource_id' : IDL.Nat64,
-    'buyer' : IDL.Text,
-    'completed_at' : IDL.Nat64,
+  const MarketplaceStatsRecord = IDL.Record({
+    'asset_pairs' : IDL.Vec(IDL.Text),
+    'trades' : IDL.Vec(IDL.Text),
+    'assets' : IDL.Vec(IDL.Text),
   });
-  const ResourceInfo = IDL.Record({
-    'id' : IDL.Nat64,
-    'token_id' : IDL.Opt(IDL.Nat64),
-    'owner' : IDL.Text,
-    'canister_id' : IDL.Text,
-    'created_at' : IDL.Nat64,
-    'resource_type' : IDL.Text,
-    'amount' : IDL.Nat64,
+  const ResponseData = IDL.Variant({
+    'Error' : IDL.Text,
+    'AssetRecords' : IDL.Vec(AssetRecord),
+    'AssetPairRecords' : IDL.Vec(AssetPairRecord),
+    'Message' : IDL.Text,
+    'TradeRecords' : IDL.Vec(TradeRecord),
+    'MarketplaceStats' : MarketplaceStatsRecord,
   });
-  const PublicLogEntry = IDL.Record({
-    'level' : IDL.Text,
-    'logger_name' : IDL.Text,
-    'message' : IDL.Text,
-    'timestamp' : IDL.Nat64,
-  });
-  const MarketplaceStats = IDL.Record({
-    'test_mode' : IDL.Bool,
-    'total_resources' : IDL.Nat64,
-    'total_offers' : IDL.Nat64,
-    'active_offers' : IDL.Nat64,
-    'total_exchanges' : IDL.Nat64,
-  });
-  const CreateResourceArg = IDL.Record({
-    'token_id' : IDL.Opt(IDL.Nat64),
-    'canister_id' : IDL.Text,
-    'resource_type' : IDL.Text,
-    'amount' : IDL.Nat64,
-  });
+  const Response = IDL.Record({ 'data' : ResponseData, 'success' : IDL.Bool });
   return IDL.Service({
-    'accept_offer' : IDL.Func([IDL.Nat64], [AcceptOfferResult], []),
-    'cancel_offer' : IDL.Func([IDL.Nat64], [AcceptOfferResult], []),
-    'create_offer' : IDL.Func([CreateOfferArg], [AcceptOfferResult], []),
-    'get_active_offers' : IDL.Func(
-        [IDL.Nat64, IDL.Nat64],
-        [IDL.Vec(OfferInfo)],
-        ['query'],
-      ),
-    'get_admin' : IDL.Func([], [IDL.Text], ['query']),
-    'get_all_exchanges' : IDL.Func(
-        [IDL.Nat64, IDL.Nat64],
-        [IDL.Vec(ExchangeInfo)],
-        ['query'],
-      ),
-    'get_all_offers' : IDL.Func(
-        [IDL.Nat64, IDL.Nat64],
-        [IDL.Vec(OfferInfo)],
-        ['query'],
-      ),
-    'get_all_resources' : IDL.Func(
-        [IDL.Nat64, IDL.Nat64],
-        [IDL.Vec(ResourceInfo)],
-        ['query'],
-      ),
-    'get_description' : IDL.Func([], [IDL.Text], ['query']),
-    'get_exchange' : IDL.Func([IDL.Nat64], [IDL.Opt(ExchangeInfo)], ['query']),
-    'get_exchanges_by_user' : IDL.Func(
-        [IDL.Text, IDL.Nat64, IDL.Nat64],
-        [IDL.Vec(ExchangeInfo)],
-        ['query'],
-      ),
-    'get_logs' : IDL.Func(
-        [IDL.Nat64, IDL.Nat64],
-        [IDL.Vec(PublicLogEntry)],
-        ['query'],
-      ),
-    'get_name' : IDL.Func([], [IDL.Text], ['query']),
-    'get_offer' : IDL.Func([IDL.Nat64], [IDL.Opt(OfferInfo)], ['query']),
-    'get_offers_by_seller' : IDL.Func(
-        [IDL.Text, IDL.Nat64, IDL.Nat64],
-        [IDL.Vec(OfferInfo)],
-        ['query'],
-      ),
-    'get_resource' : IDL.Func([IDL.Nat64], [IDL.Opt(ResourceInfo)], ['query']),
-    'get_resources_by_owner' : IDL.Func(
-        [IDL.Text, IDL.Nat64, IDL.Nat64],
-        [IDL.Vec(ResourceInfo)],
-        ['query'],
-      ),
-    'get_stats' : IDL.Func([], [MarketplaceStats], ['query']),
-    'is_test_mode' : IDL.Func([], [IDL.Bool], ['query']),
-    'register_resource' : IDL.Func(
-        [CreateResourceArg],
-        [AcceptOfferResult],
-        [],
-      ),
-    'set_admin' : IDL.Func([IDL.Text], [IDL.Bool], []),
-    'test_clear_all' : IDL.Func([], [IDL.Bool], []),
+    'accept_quote' : IDL.Func([IDL.Text], [Response], []),
+    'add_asset' : IDL.Func([IDL.Text, IDL.Principal, IDL.Text], [Response], []),
+    'add_asset_pair' : IDL.Func([IDL.Text, IDL.Text], [Response], []),
+    'get_stats' : IDL.Func([], [MarketplaceStatsRecord], ['query']),
+    'send_quote' : IDL.Func([IDL.Text, IDL.Float64], [Response], []),
   });
 };
-export const init = ({ IDL }) => {
-  const InitArg = IDL.Record({
-    'name' : IDL.Text,
-    'test' : IDL.Opt(IDL.Bool),
-    'description' : IDL.Opt(IDL.Text),
-  });
-  return [InitArg];
-};
+export const init = ({ IDL }) => { return []; };

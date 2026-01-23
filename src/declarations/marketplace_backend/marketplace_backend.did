@@ -1,79 +1,31 @@
-type AcceptOfferResult = variant { Ok : nat64; Err : GenericError };
-type CreateOfferArg = record {
-  price_amount : nat64;
-  price_canister_id : text;
-  resource_id : nat64;
+type AssetPairRecord = record { id : text; asset1 : text; asset2 : text };
+type AssetRecord = record { id : text; "principal" : text; standard : text };
+type MarketplaceStatsRecord = record {
+  asset_pairs : vec text;
+  trades : vec text;
+  assets : vec text;
 };
-type CreateResourceArg = record {
-  token_id : opt nat64;
-  canister_id : text;
-  resource_type : text;
-  amount : nat64;
+type Response = record { data : ResponseData; success : bool };
+type ResponseData = variant {
+  Error : text;
+  AssetRecords : vec AssetRecord;
+  AssetPairRecords : vec AssetPairRecord;
+  Message : text;
+  TradeRecords : vec TradeRecord;
+  MarketplaceStats : MarketplaceStatsRecord;
 };
-type ExchangeInfo = record {
-  id : nat64;
-  seller : text;
-  price_amount : nat64;
-  offer_id : nat64;
-  resource_id : nat64;
-  buyer : text;
-  completed_at : nat64;
-};
-type GenericError = record { message : text; error_code : nat };
-type InitArg = record { name : text; test : opt bool; description : opt text };
-type MarketplaceStats = record {
-  test_mode : bool;
-  total_resources : nat64;
-  total_offers : nat64;
-  active_offers : nat64;
-  total_exchanges : nat64;
-};
-type OfferInfo = record {
-  id : nat64;
+type TradeRecord = record {
+  id : text;
   status : text;
-  updated_at : nat64;
-  created_at : nat64;
-  seller : text;
-  price_amount : nat64;
-  price_canister_id : text;
-  resource_id : nat64;
+  asset_pair : text;
+  owner1 : text;
+  owner2 : text;
+  price : float64;
 };
-type PublicLogEntry = record {
-  level : text;
-  logger_name : text;
-  message : text;
-  timestamp : nat64;
-};
-type ResourceInfo = record {
-  id : nat64;
-  token_id : opt nat64;
-  owner : text;
-  canister_id : text;
-  created_at : nat64;
-  resource_type : text;
-  amount : nat64;
-};
-service : (InitArg) -> {
-  accept_offer : (nat64) -> (AcceptOfferResult);
-  cancel_offer : (nat64) -> (AcceptOfferResult);
-  create_offer : (CreateOfferArg) -> (AcceptOfferResult);
-  get_active_offers : (nat64, nat64) -> (vec OfferInfo) query;
-  get_admin : () -> (text) query;
-  get_all_exchanges : (nat64, nat64) -> (vec ExchangeInfo) query;
-  get_all_offers : (nat64, nat64) -> (vec OfferInfo) query;
-  get_all_resources : (nat64, nat64) -> (vec ResourceInfo) query;
-  get_description : () -> (text) query;
-  get_exchange : (nat64) -> (opt ExchangeInfo) query;
-  get_exchanges_by_user : (text, nat64, nat64) -> (vec ExchangeInfo) query;
-  get_logs : (nat64, nat64) -> (vec PublicLogEntry) query;
-  get_name : () -> (text) query;
-  get_offer : (nat64) -> (opt OfferInfo) query;
-  get_offers_by_seller : (text, nat64, nat64) -> (vec OfferInfo) query;
-  get_resource : (nat64) -> (opt ResourceInfo) query;
-  get_resources_by_owner : (text, nat64, nat64) -> (vec ResourceInfo) query;
-  get_stats : () -> (MarketplaceStats) query;
-  is_test_mode : () -> (bool) query;
-  register_resource : (CreateResourceArg) -> (AcceptOfferResult);
-  set_admin : (text) -> (bool);
-  test_clear_all : () -> (bool);
+service : () -> {
+  accept_quote : (text) -> (Response);
+  add_asset : (text, principal, text) -> (Response);
+  add_asset_pair : (text, text) -> (Response);
+  get_stats : () -> (MarketplaceStatsRecord) query;
+  send_quote : (text, float64) -> (Response);
 }

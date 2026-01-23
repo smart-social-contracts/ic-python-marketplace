@@ -45,5 +45,4 @@ echo ""
 
 # Verify deployment
 echo "Verifying deployment..."
-dfx canister call marketplace_backend get_name
-dfx canister call marketplace_backend is_test_mode
+dfx canister call marketplace_backend get_stats

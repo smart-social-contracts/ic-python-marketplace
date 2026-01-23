@@ -141,6 +141,8 @@ declare module '$env/static/private' {
 	export const DFX_VERSION: string;
 	export const DFX_NETWORK: string;
 	export const CANISTER_CANDID_PATH_MARKETPLACE_BACKEND: string;
+	export const CANISTER_ID_TOKEN_BACKEND_B: string;
+	export const CANISTER_ID_TOKEN_BACKEND: string;
 	export const CANISTER_ID_MARKETPLACE_FRONTEND: string;
 	export const CANISTER_ID_MARKETPLACE_BACKEND: string;
 	export const CANISTER_ID: string;
@@ -289,6 +291,8 @@ declare module '$env/dynamic/private' {
 		DFX_VERSION: string;
 		DFX_NETWORK: string;
 		CANISTER_CANDID_PATH_MARKETPLACE_BACKEND: string;
+		CANISTER_ID_TOKEN_BACKEND_B: string;
+		CANISTER_ID_TOKEN_BACKEND: string;
 		CANISTER_ID_MARKETPLACE_FRONTEND: string;
 		CANISTER_ID_MARKETPLACE_BACKEND: string;
 		CANISTER_ID: string;

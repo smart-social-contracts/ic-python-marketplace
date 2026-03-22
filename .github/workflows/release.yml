@@ -73,7 +73,7 @@ jobs:
           tag_name: ${{ steps.version.outputs.VERSION }}
           name: Release ${{ steps.version.outputs.VERSION }}
           body: |
-            ## Kybra Simple Marketplace Release ${{ steps.version.outputs.VERSION }}
+            ## IC Python Marketplace Release ${{ steps.version.outputs.VERSION }}
             
             ### Description
             A simple marketplace for trading ICRC-1 (fungible) and ICRC-7 (non-fungible) tokens on the Internet Computer.
@@ -84,7 +84,7 @@ jobs:
             - **Exchange**: A completed exchange between two users based on an offer
             
             ### Artifacts
-            - `marketplace_backend.wasm` - Marketplace backend canister (Kybra Python)
+            - `marketplace_backend.wasm` - Marketplace backend canister (Basilisk Python)
             - `marketplace_frontend.wasm` - Marketplace frontend canister (SvelteKit)
           files: |
             artifacts/marketplace_backend.wasm.gz

@@ -1,11 +1,11 @@
 from enum import Enum
 
-from kybra import (
+from basilisk import (
     init, float64, nat64, Opt, Principal, query, Record, StableBTreeMap,
     update, Variant, Vec, void, ic,
 )
-from kybra_simple_db import Database, Entity, Float, String, ManyToOne, OneToMany
-from kybra_simple_logging import get_logger
+from ic_python_db import Database, Entity, Float, String, ManyToOne, OneToMany
+from ic_python_logging import get_logger
 
 logger = get_logger(__name__)
 

@@ -28,7 +28,7 @@ dfx canister create marketplace_backend
 dfx build marketplace_backend
 
 # Copy backend artifacts
-cp .kybra/marketplace_backend/marketplace_backend.wasm "$OUTPUT_DIR/"
+cp .basilisk/marketplace_backend/marketplace_backend.wasm "$OUTPUT_DIR/"
 cp src/marketplace_backend/marketplace_backend.did "$OUTPUT_DIR/"
 gzip -k "$OUTPUT_DIR/marketplace_backend.wasm"
 

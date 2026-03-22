@@ -1,7 +1,7 @@
 {
   "canisters": {
     "marketplace_backend": {
-      "build": "python -m kybra marketplace_backend src/marketplace_backend/src/main.py",
+      "build": "python -m basilisk marketplace_backend src/marketplace_backend/src/main.py",
       "candid": "src/marketplace_backend/marketplace_backend.did",
       "declarations": {
         "node_compatibility": true
@@ -9,14 +9,14 @@
       "gzip": true,
       "tech_stack": {
         "cdk": {
-          "kybra": {}
+          "basilisk": {}
         },
         "language": {
           "python": {}
         }
       },
       "type": "custom",
-      "wasm": ".kybra/marketplace_backend/marketplace_backend.wasm",
+      "wasm": ".basilisk/marketplace_backend/marketplace_backend.wasm",
       "metadata": [
         {
           "name": "candid:service"
@@ -35,14 +35,14 @@
     },
     "token_backend": {
       "type": "custom",
-      "candid": "https://github.com/smart-social-contracts/kybra-simple-token/releases/latest/download/token_backend.did",
-      "wasm": "https://github.com/smart-social-contracts/kybra-simple-token/releases/latest/download/token_backend.wasm",
+      "candid": "https://github.com/smart-social-contracts/ic-python-token/releases/latest/download/token_backend.did",
+      "wasm": "https://github.com/smart-social-contracts/ic-python-token/releases/latest/download/token_backend.wasm",
       "init_arg": "(record { name = \"Test Token A\"; symbol = \"TKNA\"; decimals = 8 : nat8; total_supply = 100_000_000_000_000_000 : nat; fee = 10_000 : nat; test = opt true })"
     },
     "token_backend_b": {
       "type": "custom",
-      "candid": "https://github.com/smart-social-contracts/kybra-simple-token/releases/latest/download/token_backend.did",
-      "wasm": "https://github.com/smart-social-contracts/kybra-simple-token/releases/latest/download/token_backend.wasm",
+      "candid": "https://github.com/smart-social-contracts/ic-python-token/releases/latest/download/token_backend.did",
+      "wasm": "https://github.com/smart-social-contracts/ic-python-token/releases/latest/download/token_backend.wasm",
       "init_arg": "(record { name = \"Test Token B\"; symbol = \"TKNB\"; decimals = 8 : nat8; total_supply = 100_000_000_000_000_000 : nat; fee = 10_000 : nat; test = opt true })"
     }
   },

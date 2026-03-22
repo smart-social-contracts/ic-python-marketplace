@@ -4,14 +4,14 @@ This document provides context for AI assistants working on this codebase.
 
 ## Project Overview
 
-Kybra Simple Marketplace is a marketplace for trading ICRC-1 and ICRC-7 tokens on the Internet Computer, built with Kybra (Python CDK).
+IC Python Marketplace is a marketplace for trading ICRC-1 and ICRC-7 tokens on the Internet Computer, built with Basilisk (Python CDK).
 
 ## Key Technologies
 
-- **Backend**: Python with Kybra CDK
+- **Backend**: Python with Basilisk CDK
 - **Frontend**: SvelteKit with TypeScript
-- **Database**: kybra-simple-db (entity-relational storage)
-- **Logging**: kybra-simple-logging
+- **Database**: ic-python-db (entity-relational storage)
+- **Logging**: ic-python-logging
 - **Infrastructure**: DFX, GitHub Actions
 
 ## Core Entities

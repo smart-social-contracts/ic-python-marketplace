@@ -1,4 +1,4 @@
-# Kybra Simple Marketplace
+# IC Python Marketplace
 
 A simple marketplace for trading ICRC-1 (fungible) and ICRC-7 (non-fungible) tokens on the Internet Computer.
 
@@ -104,7 +104,7 @@ dfx canister id marketplace_frontend
 ## Project Structure
 
 ```
-kybra-simple-marketplace/
+ic-python-marketplace/
 ├── src/
 │   ├── marketplace_backend/
 │   │   ├── src/main.py          # Backend canister implementation
@@ -132,9 +132,9 @@ kybra-simple-marketplace/
 
 ## Dependencies
 
-- [kybra](https://github.com/demergent-labs/kybra) - Python CDK for ICP
-- [kybra-simple-db](https://github.com/smart-social-contracts/kybra-simple-db) - Entity database
-- [kybra-simple-logging](https://github.com/smart-social-contracts/kybra-simple-logging) - Logging
+- [basilisk](https://github.com/smart-social-contracts/basilisk) - Python CDK for ICP
+- [ic-python-db](https://github.com/smart-social-contracts/ic-python-db) - Entity database
+- [ic-python-logging](https://github.com/smart-social-contracts/ic-python-logging) - Logging
 
 ## CI/CD
 

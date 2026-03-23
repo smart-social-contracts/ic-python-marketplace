@@ -1,5 +1,3 @@
-from enum import Enum
-
 from basilisk import (
     init, float64, nat64, Opt, Principal, query, Record, StableBTreeMap,
     update, Variant, Vec, void, ic,
@@ -34,7 +32,7 @@ class AssetPair(Entity):
     trades = OneToMany("Trade", "asset_pair")
 
 
-class TRADE_STATUS(Enum):
+class TRADE_STATUS:
     QUOTE = "quote"
     CONFIRMED = "confirmed"
     ERROR = "error"
@@ -178,7 +176,7 @@ def send_quote(asset_pair_id: str, price: float64) -> Response:
         trade = Trade(
             id=trade_id,
             asset_pair=pair,
-            status=TRADE_STATUS.QUOTE.value,
+            status=TRADE_STATUS.QUOTE,
             price=price,
             owner1=caller,
             owner2=""
@@ -187,7 +185,7 @@ def send_quote(asset_pair_id: str, price: float64) -> Response:
             success=True,
             data=ResponseData(TradeRecords=[TradeRecord(
                 id=trade_id, asset_pair=asset_pair_id, owner1=caller,
-                owner2="", price=price, status=TRADE_STATUS.QUOTE.value
+                owner2="", price=price, status=TRADE_STATUS.QUOTE
             )])
         )
     except Exception as e:
@@ -200,13 +198,13 @@ def accept_quote(trade_id: str) -> Response:
         trade = Trade[trade_id]
         if not trade:
             return Response(success=False, data=ResponseData(Error=f"Trade {trade_id} not found"))
-        if trade.status != TRADE_STATUS.QUOTE.value:
+        if trade.status != TRADE_STATUS.QUOTE:
             return Response(success=False, data=ResponseData(Error="Trade not in quote status"))
         caller = ic.caller().to_str()
         if trade.owner1 == caller:
             return Response(success=False, data=ResponseData(Error="Cannot accept own quote"))
         trade.owner2 = caller
-        trade.status = TRADE_STATUS.CONFIRMED.value
+        trade.status = TRADE_STATUS.CONFIRMED
         return Response(
             success=True,
             data=ResponseData(TradeRecords=[TradeRecord(
